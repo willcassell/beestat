@@ -1,0 +1,28 @@
+# Generated JSON output files
+beestat_raw_*.json
+beestat_parsed_*.json
+beestat_comprehensive_*.json
+beestat_essential_*.json
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Virtual environments
+venv/
+env/
+ENV/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
