@@ -52,7 +52,7 @@ Edit the script to configure:
 BEESTAT_API_KEY = "your_api_key_here"
 
 # Target thermostats to display (set to None for all)
-TARGET_THERMOSTATS = ["Downstairs", "809 Sailors Cove"]
+TARGET_THERMOSTATS = ["Downstairs", "Lake"]
 ```
 
 ### Output
