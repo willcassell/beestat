@@ -80,7 +80,7 @@ Thermostat: Downstairs
   HVAC State: idle
   Running Equipment: []
 
-Thermostat: 809 Sailors Cove
+Thermostat: Lake
   ID: 47526
   Ecobee ID: 530168
   Current Temperature: 72.6°F
