@@ -7,6 +7,7 @@ Standalone Python scripts and documentation for working with the Beestat API to 
 ## 📁 Repository Contents
 
 ### Python Scripts
+- **`fetch_beestat_fresh.py`** - ⭐ **NEW!** Uses sync API for guaranteed fresh data
 - **`fetch_beestat_essential.py`** - Extract 5 key fields (temp, mode, equipment, humidity, setpoints)
 - **`fetch_beestat_comprehensive.py`** - Full thermostat data with analytics and metrics
 - **`fetch_beestat_simple.py`** - Basic script with minimal data extraction
@@ -33,7 +34,13 @@ Standalone Python scripts and documentation for working with the Beestat API to 
 
 ### Quick Start
 
-**Recommended - Comprehensive Data:**
+**⭐ Recommended - Fresh Data with Sync API:**
+```bash
+python3 fetch_beestat_fresh.py
+```
+Uses official sync methods to guarantee fresh data (within 15 minutes of real-time).
+
+**Comprehensive Data (may be cached):**
 ```bash
 python3 fetch_beestat_comprehensive.py
 ```
@@ -190,4 +197,32 @@ The comprehensive script extracts ALL available thermostat data into one record 
 - The script tries multiple API endpoint variations to ensure compatibility
 - Data is automatically filtered to show only configured target thermostats
 - All temperature values are in Fahrenheit
-- The Beestat API updates every few minutes with the latest Ecobee data
+
+### ⚠️ Important: Data Freshness
+
+**Beestat API may serve cached data that is hours old!**
+
+The scripts in this repository fetch data as-is from Beestat's cache. For real-time monitoring applications, you should:
+
+1. **Use sync methods before fetching** - See `API_GUIDE.md` for documentation on:
+   - `thermostat.sync` - Force sync thermostat data (max once per 3 min)
+   - `sensor.sync` - Force sync sensor data (max once per 3 min)
+   - Batch API - Combine sync calls for efficiency
+
+2. **Implement sync-then-fetch pattern:**
+   ```python
+   # Step 1: Trigger sync
+   sync_url = f"{API_BASE}?api_key={API_KEY}&resource=thermostat&method=sync"
+   urllib.request.urlopen(sync_url)
+
+   # Step 2: Wait for sync to complete (30 seconds)
+   time.sleep(30)
+
+   # Step 3: Fetch fresh data
+   fetch_url = f"{API_BASE}?api_key={API_KEY}&resource=thermostat&method=read_id"
+   response = urllib.request.urlopen(fetch_url)
+   ```
+
+3. **Check sync timestamps** - The API response includes `sync_end` field showing when data was last synced
+
+**See `API_GUIDE.md` for complete documentation on sync methods and batch API calls.**

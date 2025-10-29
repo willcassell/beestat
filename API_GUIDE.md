@@ -225,19 +225,149 @@ The additional resources (`runtime_thermostat_summary`, `runtime_thermostat`, `s
 
 ---
 
+## Forcing Fresh Data with Sync Methods
+
+**IMPORTANT**: Beestat API serves cached data that can be hours old. Use sync methods to force fresh updates!
+
+### Official Sync Methods
+
+Beestat provides official sync methods to force immediate data updates from Ecobee:
+
+#### 1. Thermostat Sync: `thermostat.sync`
+
+Force Beestat to sync your thermostats from Ecobee immediately.
+
+**URL Format:**
+```
+https://api.beestat.io/?api_key=YOUR_KEY&resource=thermostat&method=sync
+```
+
+**Rate Limit:** Maximum once per 3 minutes
+
+**Use Case:** Before fetching current thermostat data to ensure it's fresh
+
+#### 2. Sensor Sync: `sensor.sync`
+
+Force Beestat to sync your sensor data from Ecobee immediately.
+
+**URL Format:**
+```
+https://api.beestat.io/?api_key=YOUR_KEY&resource=sensor&method=sync
+```
+
+**Rate Limit:** Maximum once per 3 minutes
+
+**Use Case:** Before fetching room sensor data
+
+#### 3. Runtime Sync: `runtime.sync`
+
+Force Beestat to sync historical runtime data from Ecobee.
+
+**URL Format:**
+```
+https://api.beestat.io/?api_key=YOUR_KEY&resource=runtime&method=sync&arguments={"thermostat_id":12345}
+```
+
+**Rate Limit:** Maximum once per 15 minutes
+
+**Use Case:** Before analyzing historical runtime data
+
+---
+
+## Batch API Calls
+
+**Make multiple API calls in a single HTTP request for better performance!**
+
+### Batch Format
+
+Instead of making separate API calls, batch them together:
+
+```
+https://api.beestat.io/?api_key=YOUR_KEY&batch=[
+  {"resource":"thermostat","method":"sync","alias":"thermostat_sync"},
+  {"resource":"sensor","method":"sync","alias":"sensor_sync"}
+]
+```
+
+### Batch Response Format
+
+```json
+{
+  "thermostat_sync": {
+    "success": true,
+    "data": {...}
+  },
+  "sensor_sync": {
+    "success": true,
+    "data": {...}
+  }
+}
+```
+
+### Benefits of Batching
+
+- ✅ Single HTTP connection (faster)
+- ✅ Reduced API overhead
+- ✅ Atomic operation (all succeed or fail together)
+- ✅ Cleaner code
+
+### Example: Sync + Fetch Pattern (Recommended)
+
+For fresh data, use this two-step pattern:
+
+**Step 1: Trigger sync (batched)**
+```python
+import json
+import urllib.request
+
+batch = [
+    {"resource": "thermostat", "method": "sync", "alias": "thermostat_sync"},
+    {"resource": "sensor", "method": "sync", "alias": "sensor_sync"}
+]
+
+url = f"https://api.beestat.io/?api_key={API_KEY}&batch={json.dumps(batch)}"
+urllib.request.urlopen(url)
+```
+
+**Step 2: Wait briefly (30 seconds), then fetch data**
+```python
+import time
+time.sleep(30)
+
+url = f"https://api.beestat.io/?api_key={API_KEY}&resource=thermostat&method=read_id"
+response = urllib.request.urlopen(url)
+data = json.loads(response.read())
+```
+
+**Why this matters:**
+- Without sync: Data can be hours old
+- With sync: Data is fresh (within 15 minutes of Ecobee's last update)
+- Ecobee updates every 15 minutes, so sync gets the latest available data
+
+---
+
 ## Rate Limits
 
 Beestat API has rate limiting to prevent abuse:
-- Reasonable polling intervals (every 5-15 minutes) are fine
-- Data is synced from Ecobee every 5 minutes
-- More frequent requests won't give you newer data
+- **Read operations**: Reasonable polling (every 5-15 minutes) is fine
+- **Sync operations**:
+  - thermostat.sync / sensor.sync: Max once per 3 minutes
+  - runtime.sync: Max once per 15 minutes
+- More frequent requests won't give newer data due to Ecobee's update cycle
 
 ## Data Freshness
 
-- Beestat syncs with Ecobee every 5 minutes
-- Weather data is updated regularly
-- Historical analytics are calculated daily
-- Some lag compared to direct Ecobee API access
+**Without sync methods:**
+- Cached data can be hours or days old
+- Beestat syncs automatically "based on user activity"
+- Website visits trigger syncs, but API calls don't
+
+**With sync methods (recommended):**
+- Force immediate sync from Ecobee
+- Data freshness within 15 minutes (Ecobee's update interval)
+- Ecobee thermostats report to cloud every 15 minutes
+- Weather data updates regularly
+- Historical analytics calculated daily
 
 ## Support
 
